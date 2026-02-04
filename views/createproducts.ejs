@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Create Product | Scatch Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+
+
+<% if (error && error.length > 0) { %>
+  <div class="mb-4 bg-red-500 text-white px-4 py-2 rounded">
+    <%= error[0] %>
+  </div>
+<% } %>
+
+<% if (success && success.length > 0) { %>
+  <div class="mb-4 bg-green-500 text-white px-4 py-2 rounded">
+    <%= success[0] %>
+  </div>
+<% } %>
+
+
+
+
+  <!-- NAVBAR -->
+  <nav class="bg-white shadow px-8 py-4 flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-gray-800">
+      Scatch <span class="text-blue-500">Admin</span>
+    </h1>
+
+    <a href="/users/logout" class="text-red-500 font-medium hover:underline">
+      Logout
+    </a>
+  </nav>
+
+  <div class="flex">
+
+    <!-- SIDEBAR -->
+    <aside class="w-64 bg-white shadow-md min-h-screen p-6">
+      <ul class="space-y-4">
+        <li>
+          <a href="/owners/admin" class="text-gray-700 hover:text-blue-500 font-medium">
+            📦 All Products
+          </a>
+        </li>
+        <li>
+          <a href="/owners/create-product" class="text-blue-600 font-semibold">
+            ➕ Create Product
+          </a>
+        </li>
+      </ul>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 p-10">
+
+      <div class="max-w-4xl bg-white rounded-xl shadow-lg p-8">
+
+        <h2 class="text-3xl font-bold mb-8 text-gray-800">
+          Create New Product
+        </h2>
+
+        <form
+          action="/products/create"
+          method="POST"
+          enctype="multipart/form-data"
+          class="space-y-8"
+        >
+
+          <!-- IMAGE -->
+          <div>
+            <label class="block font-medium mb-2">Product Image</label>
+
+            <div class="flex items-center gap-6">
+              <div
+                id="preview"
+                class="w-32 h-32 rounded-lg border border-dashed flex items-center justify-center text-gray-400">
+                Preview
+              </div>
+
+              <input
+                type="file"
+                name="image"
+                accept="image/*"
+                required
+                onchange="previewImage(event)"
+                class="block w-full text-sm text-gray-600
+                       file:mr-4 file:py-2 file:px-4
+                       file:rounded-md file:border-0
+                       file:bg-blue-50 file:text-blue-600
+                       hover:file:bg-blue-100" />
+            </div>
+          </div>
+
+          <!-- PRODUCT DETAILS -->
+          <div>
+            <h3 class="text-xl font-semibold mb-4">Product Details</h3>
+
+            <div class="grid grid-cols-2 gap-6">
+              <input
+                type="text"
+                name="name"
+                placeholder="Product Name"
+                required
+                class="input" />
+
+              <input
+                type="number"
+                name="price"
+                placeholder="Product Price"
+                required
+                class="input" />
+
+              <input
+                type="number"
+                name="discount"
+                placeholder="Discount (%)"
+                class="input col-span-2" />
+            </div>
+          </div>
+
+          <!-- PANEL / UI COLORS -->
+          <div>
+            <h3 class="text-xl font-semibold mb-4">UI Panel Colors</h3>
+
+            <div class="grid grid-cols-3 gap-6">
+              <div>
+                <label class="text-sm text-gray-600">Background</label>
+                <input type="color" name="bgcolor" class="h-12 w-full rounded-md border" />
+              </div>
+
+              <div>
+                <label class="text-sm text-gray-600">Panel</label>
+                <input type="color" name="panelcolor" class="h-12 w-full rounded-md border" />
+              </div>
+
+              <div>
+                <label class="text-sm text-gray-600">Text</label>
+                <input type="color" name="textcolor" class="h-12 w-full rounded-md border" />
+              </div>
+            </div>
+
+            <p class="text-sm text-gray-500 mt-2">
+              These colors control how the product card looks in the shop.
+            </p>
+          </div>
+
+          <!-- SUBMIT -->
+          <div class="pt-6">
+            <button
+              type="submit"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-10 py-3 rounded-lg font-semibold transition">
+              Create New Product
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <!-- IMAGE PREVIEW -->
+  <script>
+    function previewImage(event) {
+      const preview = document.getElementById("preview");
+      preview.innerHTML = "";
+
+      const img = document.createElement("img");
+      img.src = URL.createObjectURL(event.target.files[0]);
+      img.className = "w-full h-full object-cover rounded-lg";
+
+      preview.appendChild(img);
+    }
+  </script>
+
+  <!-- INPUT STYLES -->
+  <style>
+    .input {
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      outline: none;
+      transition: 0.2s;
+    }
+    .input:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 1px #3b82f6;
+    }
+  </style>
+
+</body>
+</html>
