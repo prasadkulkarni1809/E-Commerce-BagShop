@@ -1,11 +1,20 @@
 const mongoose = require("mongoose");
 
-mongoose.connect(process.env.MONGO_URI)
-.then(() => {
-  console.log("Connected to MongoDB");
-})
-.catch((err) => {
-  console.error("MongoDB Error:", err);
-});
+const connectDB = async () => {
+  try {
+    const dbURI =
+      process.env.MONGO_URI || "mongodb://127.0.0.1:27017/ecommerce";
 
-module.exports = mongoose.connection;
+    await mongoose.connect(dbURI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+
+    console.log("MongoDB Connected Successfully 🚀");
+  } catch (error) {
+    console.error("MongoDB Connection Error ❌:", error);
+    process.exit(1);
+  }
+};
+
+module.exports = connectDB;
