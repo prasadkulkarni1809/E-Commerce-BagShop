@@ -5,7 +5,7 @@ const router = express.Router();
 
 const {generateToken}  = require("../utils/generateToken")
 const {registerUser,loginUser}= require("../controllers/authController");
-const isLoggedIn = require("../middlewares/isLoggedIn");
+const isLoggedIn = require("../middlewares/isLoggedin");
 const userModel = require("../models/user-models");
 const orderModel = require("../models/order-models");
 
