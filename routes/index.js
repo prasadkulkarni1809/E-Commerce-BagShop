@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const crypto = require("crypto");
 
-const isLoggedIn = require("../middlewares/isLoggedIn");
+const isLoggedIn = require("../middlewares/isLoggedin");
 const productModel = require("../models/product-model");
 const userModel = require("../models/user-models");
 const orderModel = require("../models/order-models");
