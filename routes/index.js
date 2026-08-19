@@ -22,15 +22,15 @@ router.get("/", (req, res) => {
 // =====================
 // SHOP
 // =====================
+
 router.get("/shop", isLoggedIn, async (req, res) => {
   try {
     const { sort, collection, filter } = req.query;
 
-    const cartCount = req.user.cart.reduce(
-      (sum, item) => sum + item.quantity,
-      0
-    );
-
+const cartCount = (req.user.cart || []).reduce(
+  (sum, item) => sum + (item.quantity || 0),
+  0
+);
     let query = {};
     if (collection === "discount" || filter === "discount") {
       query.discount = { $gt: 0 };
@@ -215,16 +215,19 @@ router.post("/checkout", isLoggedIn, async (req, res) => {
 
     if (!user.cart.length) return res.redirect("/cart");
 
-    let subtotal = 0;
-    const items = user.cart.map(i => {
-      subtotal += i.product.price * i.quantity;
-      return {
-        product: i.product._id,
-        quantity: i.quantity,
-        price: i.product.price,
-      };
-    });
+   let subtotal = 0;
 
+const items = user.cart.map(i => {
+  subtotal += i.product.price * i.quantity;
+
+  return {
+    product: i.product._id,
+    seller: i.product.seller,
+    quantity: i.quantity,
+    price: i.product.price
+  };
+});
+console.log(items);
     const order = await orderModel.create({
       user: user._id,
       items,
@@ -304,7 +307,7 @@ router.post("/payment/verify", isLoggedIn, async (req, res) => {
 
   const user = await userModel.findById(order.user);
   user.cart = [];
-  await user.save();
+  await user.save();  
 
   res.json({ success: true });
 });

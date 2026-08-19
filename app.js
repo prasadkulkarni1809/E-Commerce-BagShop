@@ -5,7 +5,10 @@ require("dotenv").config();
 // =====================
 // DATABASE
 // =====================
-require("./config/mongoose-connection");
+const connectDB = require("./config/mongoose-connection");
+
+connectDB();
+
 
 // =====================
 // CORE MODULES

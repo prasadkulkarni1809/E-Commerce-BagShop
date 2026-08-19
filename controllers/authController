@@ -1,12 +1,15 @@
 const bcrypt = require("bcrypt");
+
 const userModel = require("../models/user-models");
+const ownerModel = require("../models/owner-model");
+
 const generateToken = require("../utils/generateToken");
+
 
 // =====================
 // REGISTER USER
 // =====================
 module.exports.registerUser = async (req, res) => {
-
   try {
     const { fullname, email, password } = req.body;
 
@@ -27,16 +30,18 @@ module.exports.registerUser = async (req, res) => {
       fullname,
       email,
       password: hash,
+      role: "user" // 🔥 important
     });
 
     const token = generateToken(user);
-    res.cookie("token", token, {
-  httpOnly: true,
-  sameSite: "lax",
-});
 
+    res.cookie("token", token, {
+      httpOnly: true,
+      sameSite: "lax",
+    });
 
     return res.redirect("/shop");
+
   } catch (err) {
     console.error("REGISTER ERROR:", err);
     req.flash("error", "Server error");
@@ -44,41 +49,91 @@ module.exports.registerUser = async (req, res) => {
   }
 };
 
+
+
 // =====================
-// LOGIN USER
+// 🔥 COMBINED LOGIN (USER + OWNER)
 // =====================
 module.exports.loginUser = async (req, res) => {
-    
-  console.log(req.body);
   try {
     const { email, password } = req.body;
 
+    console.log("LOGIN DATA:", email);
+
+    // =====================
+    // 1️⃣ TRY USER LOGIN
+    // =====================
     const user = await userModel.findOne({ email });
-     console.log("Plain password:", password);
-console.log("Stored hash:", user.password);
-console.log("Compare result:", await bcrypt.compare(password, user.password));
 
-    if (!user) {
+    if (user) {
+      console.log("✅ User found");
+
+      const match = await bcrypt.compare(password, user.password);
+
+      if (!match) {
+        console.log("❌ Wrong password (user)");
+        req.flash("error", "Email or password incorrect");
+        return res.redirect("/");
+      }
+
+      // 🔥 PASS USER
+      const token = generateToken(user);
+
+      res.cookie("token", token, {
+        httpOnly: true,
+        sameSite: "lax",
+      });
+
+      console.log("✅ User login success");
+
+      return res.redirect("/shop");
+    }
+
+    // =====================
+    // 2️⃣ TRY OWNER LOGIN
+    // =====================
+    console.log("Not user, checking owner...");
+
+    const owner = await ownerModel.findOne({ email }).lean();
+
+    console.log("FULL OWNER OBJECT:", owner); // debug
+    console.log("OWNER ROLE FROM DB:", owner?.role); // 🔥 ADD THIS LINE
+
+    if (!owner) {
+      console.log("❌ No user or owner found");
       req.flash("error", "Email or password incorrect");
       return res.redirect("/");
     }
 
-    const match = await bcrypt.compare(password, user.password);
-   
-    if (!match) {
+    console.log("✅ Owner found");
+
+    let isMatch = false;
+
+    // support both hashed & plain passwords
+    if (owner.password.startsWith("$2b$")) {
+      isMatch = await bcrypt.compare(password, owner.password);
+    } else {
+      isMatch = password === owner.password;
+    }
+
+    if (!isMatch) {
+      console.log("❌ Wrong password (owner)");
       req.flash("error", "Email or password incorrect");
       return res.redirect("/");
     }
 
-    const token = generateToken(user);
-    console.log(token)
+    // 🔥 PASS OWNER (VERY IMPORTANT)
+    const token = generateToken(owner);
+
     res.cookie("token", token, {
-  httpOnly: true,
-  sameSite: "lax",
-});
+      httpOnly: true,
+      sameSite: "lax",
+    });
 
+    console.log("✅ Owner login success");
 
-    return res.redirect("/shop");
+    return res.redirect("/owners/admin");
+
   } catch (err) {
     console.error("LOGIN ERROR:", err);
     req.flash("error", "Something went wrong");

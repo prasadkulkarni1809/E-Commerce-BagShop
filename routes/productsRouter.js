@@ -2,9 +2,11 @@ const express = require("express");
 const router = express.Router();
 const upload = require("../config/multer-config");
 const productModel = require("../models/product-model");
+const isLoggedIn = require("../middlewares/isLoggedIn");
 
 router.post(
   "/create",
+    isLoggedIn,
   upload.single("image"),
   async function (req, res) {
     try {
@@ -29,6 +31,7 @@ router.post(
         return res.redirect("/products/create");
       }
 
+console.log("REQ USER =", req.user);
       await productModel.create({
         name,
         price,
@@ -38,7 +41,8 @@ router.post(
         textcolor,
         image:
     `data:${req.file.mimetype};base64,` +
-    req.file.buffer.toString("base64"), // ✅ teacher-style
+    req.file.buffer.toString("base64"), 
+      seller: req.user._id// ✅ teacher-style
       });
 
       // ✅ Success

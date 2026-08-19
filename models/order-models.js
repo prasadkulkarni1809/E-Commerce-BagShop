@@ -1,75 +1,151 @@
 const mongoose = require("mongoose");
 
 const orderSchema = new mongoose.Schema(
-  {
+{
     user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "user",
-      required: true,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "user",
+        required: true
     },
 
     items: [
-      {
-        product: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "product",
-          required: true,
-        },
-        quantity: {
-          type: Number,
-          required: true,
-        },
-        price: {
-          type: Number,
-          required: true,
-        },
-      },
+        {
+            product: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "product",
+                required: true
+            },
+
+            seller: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "owner",
+                required: true
+            },
+
+            quantity: {
+                type: Number,
+                required: true
+            },
+
+            price: {
+                type: Number,
+                required: true
+            }
+        }
     ],
 
     address: {
-      type: String,
-      required: true,
+        type: String,
+        required: true
     },
+
     city: {
-      type: String,
-      required: true,
+        type: String,
+        required: true
     },
+
     pincode: {
-      type: String,
-      required: true,
+        type: String,
+        required: true
     },
+
     phone: {
-      type: String,
-      required: true,
+        type: String,
+        required: true
     },
 
     paymentMethod: {
-      type: String,
-      enum: ["COD", "ONLINE"], // ✅ IMPORTANT FIX
-      required: true,
+        type: String,
+        enum: ["COD", "ONLINE"],
+        required: true
+    },
+
+    paymentStatus: {
+        type: String,
+        enum: ["PENDING", "PAID", "FAILED", "REFUNDED"],
+        default: "PENDING"
     },
 
     amount: {
-      type: Number,
-      required: true, // ✅ REQUIRED
+        type: Number,
+        required: true
     },
-razorpay: {
-  orderId: String,
-  paymentId: String,
-  signature: String
-},
-status: {
-  type: String,
-  enum: ["PLACED", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED"],
-  default: "PLACED"
-},
+
+    razorpay: {
+        orderId: String,
+        paymentId: String,
+        signature: String
+    },
+
     status: {
-      type: String,
-      enum: ["PLACED", "PAID", "FAILED"],
-      default: "PLACED",
+        type: String,
+        enum: [
+            "PLACED",
+            "ACCEPTED",
+            "REJECTED",
+            "PACKED",
+            "SHIPPED",
+            "OUT_FOR_DELIVERY",
+            "DELIVERED",
+            "CANCELLED"
+        ],
+        default: "PLACED"
     },
-  },
-  { timestamps: true }
+
+    deliveryUpdate: {
+        type: String,
+        default: "Order Placed"
+    },
+
+    trackingNumber: {
+        type: String,
+        default: ""
+    },
+
+    courierPartner: {
+        type: String,
+        default: ""
+    },
+
+    expectedDeliveryDate: {
+        type: Date
+    },
+
+    exchangeRequested: {
+        type: Boolean,
+        default: false
+    },
+
+    exchangeReason: {
+        type: String,
+        default: ""
+    },
+
+    exchangeStatus: {
+        type: String,
+        enum: [
+            "NONE",
+            "REQUESTED",
+            "APPROVED",
+            "REJECTED",
+            "COMPLETED"
+        ],
+        default: "NONE"
+    },
+
+    cancellationReason: {
+        type: String,
+        default: ""
+    },
+
+    sellerNote: {
+        type: String,
+        default: ""
+    }
+},
+{
+    timestamps: true
+}
 );
 
 module.exports = mongoose.model("order", orderSchema);
