@@ -47,8 +47,8 @@ app.set("view engine", "ejs");
 // =====================
 // SESSION + FLASH
 // =====================
-console.log("RAZORPAY KEY:", process.env.RAZORPAY_KEY_ID);
-console.log("RAZORPAY SECRET:", process.env.RAZORPAY_KEY_SECRET);
+
+
 
 app.use(
   session({

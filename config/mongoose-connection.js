@@ -5,13 +5,12 @@ const connectDB = async () => {
     const dbURI =
       process.env.MONGO_URI || "mongodb://localhost:27017/ecommerce";
 
-    console.log("Connecting to:", dbURI);
-
     await mongoose.connect(dbURI);
 
     console.log("MongoDB Connected Successfully 🚀");
   } catch (error) {
     console.error("MongoDB Connection Error ❌:", error);
+    process.exit(1);
   }
 };
 

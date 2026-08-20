@@ -174,6 +174,7 @@ router.get("/cart/remove/:productid", isLoggedIn, async (req, res) => {
 // =====================
 // CHECKOUT PAGE
 // =====================
+
 router.get("/checkout", isLoggedIn, async (req, res) => {
   const user = await userModel
     .findById(req.user._id)
@@ -204,55 +205,137 @@ router.get("/checkout", isLoggedIn, async (req, res) => {
 
 // =====================
 // PLACE ORDER
-// =====================
 router.post("/checkout", isLoggedIn, async (req, res) => {
   try {
-    const { address, city, pincode, phone, paymentMethod } = req.body;
-
-    const user = await userModel
-      .findById(req.user._id)
-      .populate("cart.product");
-
-    if (!user.cart.length) return res.redirect("/cart");
-
-   let subtotal = 0;
-
-const items = user.cart.map(i => {
-  subtotal += i.product.price * i.quantity;
-
-  return {
-    product: i.product._id,
-    seller: i.product.seller,
-    quantity: i.quantity,
-    price: i.product.price
-  };
-});
-console.log(items);
-    const order = await orderModel.create({
-      user: user._id,
-      items,
+    const {
       address,
       city,
       pincode,
       phone,
-      paymentMethod, // "COD" or "ONLINE"
-      amount: subtotal + 20,
-      paymentStatus: paymentMethod === "COD" ? "PENDING" : "CREATED",
+      paymentMethod
+    } = req.body;
+
+    // =========================
+    // GET USER + CART PRODUCTS
+    // =========================
+    const user = await userModel
+      .findById(req.user._id)
+      .populate("cart.product");
+
+    if (!user) {
+      req.flash("error", "User not found");
+      return res.redirect("/");
+    }
+
+    if (!user.cart || user.cart.length === 0) {
+      req.flash("error", "Your cart is empty");
+      return res.redirect("/cart");
+    }
+
+    // =========================
+    // VALIDATE PAYMENT METHOD
+    // =========================
+    if (!["COD", "ONLINE"].includes(paymentMethod)) {
+      req.flash("error", "Invalid payment method");
+      return res.redirect("/checkout");
+    }
+
+    // =========================
+    // CREATE ORDER ITEMS
+    // =========================
+    let subtotal = 0;
+
+    const items = user.cart.map((i, index) => {
+
+      // Product missing
+      if (!i.product) {
+        throw new Error(
+          `Product not found for cart item ${index}`
+        );
+      }
+
+      // Seller missing
+      if (!i.product.seller) {
+        throw new Error(
+          `Seller missing for product: ${i.product.name}`
+        );
+      }
+
+      const price = Number(i.product.price);
+      const quantity = Number(i.quantity);
+
+      subtotal += price * quantity;
+
+      return {
+        product: i.product._id,
+        seller: i.product.seller,
+        quantity: quantity,
+        price: price
+      };
     });
 
+    // =========================
+    // TOTAL AMOUNT
+    // =========================
+    const deliveryCharge = 20;
+    const amount = subtotal + deliveryCharge;
+
+    // =========================
+    // CREATE MONGODB ORDER
+    // =========================
+    const order = await orderModel.create({
+      user: user._id,
+
+      items: items,
+
+      address: address,
+      city: city,
+      pincode: pincode,
+      phone: phone,
+
+      paymentMethod: paymentMethod,
+
+      // IMPORTANT:
+      // "CREATED" is NOT allowed by your schema.
+      // Online payment starts as PENDING.
+      paymentStatus: "PENDING",
+
+      amount: amount
+    });
+
+    console.log("✅ ORDER CREATED:", order._id);
+
+    // =========================
+    // COD
+    // =========================
     if (paymentMethod === "COD") {
+
       user.cart = [];
+
       await user.save();
+
       return res.redirect("/orders/success");
     }
 
-    res.redirect(`/orders/pay/${order._id}`);
+    // =========================
+    // ONLINE PAYMENT
+    // =========================
+    return res.redirect(
+      `/orders/pay/${order._id}`
+    );
+
   } catch (err) {
+
     console.error("CHECKOUT ERROR:", err);
-    res.redirect("/checkout");
+
+    req.flash(
+      "error",
+      err.message || "Unable to place order"
+    );
+
+    return res.redirect("/checkout");
   }
 });
-
 // =====================
 // RAZORPAY PAYMENT
 // =====================
@@ -296,11 +379,16 @@ router.post("/payment/verify", isLoggedIn, async (req, res) => {
     return res.status(400).json({ success: false });
   }
 
-  const order = await orderModel.findOne({
-    "razorpay.orderId": razorpay_order_id,
-  });
+ const order = await orderModel.findOne({
+  "razorpay.orderId": razorpay_order_id,
+});
 
-  order.paymentStatus = "PAID";
+if (!order) {
+  return res.status(404).json({
+    success: false,
+    message: "Order not found"
+  });
+}
   order.razorpay.paymentId = razorpay_payment_id;
   order.razorpay.signature = razorpay_signature;
   await order.save();

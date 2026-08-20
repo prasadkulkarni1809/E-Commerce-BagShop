@@ -9,6 +9,7 @@ const generateToken = require("../utils/generateToken");
 // =====================
 // REGISTER USER
 // =====================
+
 module.exports.registerUser = async (req, res) => {
   try {
     const { fullname, email, password } = req.body;
@@ -63,6 +64,9 @@ module.exports.loginUser = async (req, res) => {
     // =====================
     // 1️⃣ TRY USER LOGIN
     // =====================
+   
+console.log("COLLECTION:", userModel.collection.name);
+console.log("USER COUNT:", await userModel.countDocuments());
     const user = await userModel.findOne({ email });
 
     if (user) {
