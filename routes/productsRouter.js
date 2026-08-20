@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const upload = require("../config/multer-config");
 const productModel = require("../models/product-model");
-const isLoggedIn = require("../middlewares/isLoggedIn");
+const isLoggedIn = require("../middlewares/isLoggedin");
 
 router.post(
   "/create",
